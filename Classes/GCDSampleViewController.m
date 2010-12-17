@@ -11,7 +11,7 @@
 #import <sys/time.h>
 
 #define TWITTER_URL_PUBLIC_TIMELINE @"http://api.twitter.com/1/statuses/public_timeline.json"
-#define	IMAGE_Q_SIZE 2
+#define	IMAGE_Q_SIZE 3
 
 @implementation GCDSampleViewController
 @synthesize tweetMessages;
@@ -93,7 +93,6 @@ void elapsedTimeLog(NSString *msg) {
 			[self.tableView reloadData];
 		});
 	});
-	elapsedTimeLog(nil);
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -113,6 +112,7 @@ void elapsedTimeLog(NSString *msg) {
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+	elapsedTimeLog(nil);
 	return tweetMessages ? [tweetMessages count] : 1;
 }
 
