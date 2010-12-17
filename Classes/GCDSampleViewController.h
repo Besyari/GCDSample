@@ -14,7 +14,7 @@
 
 	dispatch_queue_t main_queue;
 	dispatch_queue_t timeline_queue;
-	dispatch_queue_t image_queue;
+	dispatch_queue_t image_queue[10];
 }
 @property (nonatomic, retain) NSMutableArray *tweetMessages;
 @property (nonatomic, retain) NSMutableArray *tweetIconURLs;

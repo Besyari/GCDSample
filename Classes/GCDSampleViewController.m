@@ -8,15 +8,36 @@
 
 #import "GCDSampleViewController.h"
 #import "JSON.h"
+#import <sys/time.h>
 
 #define TWITTER_URL_PUBLIC_TIMELINE @"http://api.twitter.com/1/statuses/public_timeline.json"
+#define	IMAGE_Q_SIZE 2
 
 @implementation GCDSampleViewController
 @synthesize tweetMessages;
 @synthesize tweetIconURLs;
 
 #pragma mark -
-#pragma mark Tweitter access
+#pragma mark Timer
+
+
+void elapsedTimeLog(NSString *msg) {
+	static struct timeval lastTime;
+	struct timeval currentTime;
+	
+	gettimeofday(&currentTime, NULL);
+	if (msg) {
+		float t = ((currentTime.tv_sec * 1000000 + currentTime.tv_usec) -
+				   (lastTime.tv_sec * 1000000 + lastTime.tv_usec)) / 1000000.0;
+		NSLog(@"++ %@ : %6.3f", msg, t);
+	} else {
+		NSLog(@"++ timer started");
+		lastTime = currentTime;
+	}
+}
+
+#pragma mark -
+#pragma mark Twitter access
 
 
 - (NSData *)getData:(NSString *)url; {
@@ -60,7 +81,11 @@
 	
 	main_queue = dispatch_get_main_queue();
 	timeline_queue = dispatch_queue_create("com.ey-office.gcd-sample.timeline", NULL);
-	image_queue = dispatch_queue_create("com.ey-office.gcd-sample.image", NULL);
+	char qLabel[] = {"com.ey-office.gcd-sample.image0"};
+	for (int i = 0; i < IMAGE_Q_SIZE; i++) {
+		qLabel[strlen(qLabel) - 1] = '0' + i;
+		image_queue[i] = dispatch_queue_create(qLabel, NULL);
+	}
 	
 	dispatch_async(timeline_queue, ^{
 		[self getPublicTimeline];
@@ -68,13 +93,16 @@
 			[self.tableView reloadData];
 		});
 	});
+	elapsedTimeLog(nil);
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
 	[super viewWillDisappear:animated];
 
 	dispatch_release(timeline_queue);
-	dispatch_release(image_queue);
+	for (int i = 0; i < IMAGE_Q_SIZE; i++) {
+		dispatch_release(image_queue[i]);
+	}
 }
 					   
 #pragma mark -
@@ -109,12 +137,13 @@
 	cell.textLabel.textColor = [UIColor darkGrayColor];
 	cell.imageView.image = [UIImage imageNamed:@"blank.png"];
 
-	dispatch_async(image_queue, ^{
+	dispatch_async(image_queue[[indexPath row] % IMAGE_Q_SIZE], ^{
 		UIImage *icon = [self getImage:[tweetIconURLs objectAtIndex:[indexPath row]]];
 		dispatch_async(main_queue, ^{
 			UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
 			cell.imageView.image = icon;
 		});
+		elapsedTimeLog([NSString stringWithFormat:@"icon %d displayed", [indexPath row]]);
 	});
 
     return cell;
