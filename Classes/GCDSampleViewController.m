@@ -8,6 +8,7 @@
 
 #import "GCDSampleViewController.h"
 #import "JSON.h"
+#import <sys/time.h>
 
 #define TWITTER_URL_PUBLIC_TIMELINE @"http://api.twitter.com/1/statuses/public_timeline.json"
 
@@ -16,7 +17,28 @@
 @synthesize tweetIconURLs;
 
 #pragma mark -
-#pragma mark Tweitter access
+#pragma mark Timer
+
+
+void elapsedTimeLog(NSString *msg) {
+	static struct timeval lastTime;
+	struct timeval currentTime;
+	
+	gettimeofday(&currentTime, NULL);
+	if (msg) {
+		float t = ((currentTime.tv_sec * 1000000 + currentTime.tv_usec) -
+				   (lastTime.tv_sec * 1000000 + lastTime.tv_usec)) / 1000000.0;
+		NSLog(@"++ %@ : %6.3f", msg, t);
+	} else {
+		NSLog(@"++ timer started");
+		lastTime = currentTime;
+	}
+}
+
+
+
+#pragma mark -
+#pragma mark Twitter access
 
 
 - (NSData *)getData:(NSString *)url; {
@@ -60,7 +82,7 @@
 	
 	main_queue = dispatch_get_main_queue();
 	timeline_queue = dispatch_queue_create("com.ey-office.gcd-sample.timeline", NULL);
-	image_queue = dispatch_queue_create("com.ey-office.gcd-sample.image", NULL);
+	image_queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	
 	dispatch_async(timeline_queue, ^{
 		[self getPublicTimeline];
@@ -85,6 +107,7 @@
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+	elapsedTimeLog(nil);
 	return tweetMessages ? [tweetMessages count] : 1;
 }
 
@@ -114,6 +137,7 @@
 		dispatch_async(main_queue, ^{
 			UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
 			cell.imageView.image = icon;
+			elapsedTimeLog([NSString stringWithFormat:@"icon %d displayed", [indexPath row]]);
 		});
 	});
 
