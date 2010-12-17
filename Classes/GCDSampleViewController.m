@@ -93,7 +93,6 @@ void elapsedTimeLog(NSString *msg) {
 			[self.tableView reloadData];
 		});
 	});
-	elapsedTimeLog(nil);
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -113,6 +112,7 @@ void elapsedTimeLog(NSString *msg) {
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+	elapsedTimeLog(nil);
 	return tweetMessages ? [tweetMessages count] : 1;
 }
 
